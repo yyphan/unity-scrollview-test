@@ -26,13 +26,10 @@ public class OptimizeScroll : MonoBehaviour
     private void OnEnable()
     {
         scrollRect.onValueChanged.AddListener(HandleScroll);
-        InitRows();
+        Init();
     }
 
-    /// <summary>
-    /// Entry point
-    /// </summary>
-    private void InitRows()
+    private void Init()
     {
         // TODO
         // calling this to make sure ScrollRect is fully drawn, any alternatives?
@@ -40,12 +37,11 @@ public class OptimizeScroll : MonoBehaviour
         
         // one-time setup
         Vector3[] worldCorners = new Vector3[4];
-        GetComponent<RectTransform>().GetWorldCorners(worldCorners);
+        viewPort.GetWorldCorners(worldCorners);
         viewPortBtmY = worldCorners[0].y;
         viewPortTopY = worldCorners[1].y;
-        float viewportHeight = GetComponent<ScrollRect>().viewport.rect.height;
-        float rowPlusSpacingHeight = InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING;
-        visibleRowCount = Mathf.CeilToInt(viewportHeight / rowPlusSpacingHeight) + 1;
+        float viewportHeight = Mathf.Abs(viewPortTopY - viewPortBtmY);
+        visibleRowCount = Mathf.CeilToInt(viewportHeight / RowHeightPlusSpacing) + 1;
         
         SetupPooling(visibleRowCount);
 
@@ -200,13 +196,12 @@ public class OptimizeScroll : MonoBehaviour
 
     #endregion // [ Row Operations ]
     
-
     #region [ Pooling ]
 
-    private void SetupPooling(int initalPoolCount)
+    private void SetupPooling(int initialPoolCount)
     {
         rowPool.Clear();
-        for (int i = 0; i < initalPoolCount; i++)
+        for (int i = 0; i < initialPoolCount; i++)
         {
             var obj = Instantiate(GetRowPrefab(), inventoryManager.ContentHolder);
             obj.SetActive(false);

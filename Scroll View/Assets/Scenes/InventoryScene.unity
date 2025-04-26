@@ -1490,7 +1490,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   contentHolder: {fileID: 1593921084}
-  verticalLayoutGroup: {fileID: 0}
   inventoryRow: {fileID: 2416259030942289835, guid: 640bce65542764fd5ab07fb2d2a0ba6c, type: 3}
   numRows: 20
 --- !u!114 &1729351182
