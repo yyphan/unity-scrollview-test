@@ -16,18 +16,44 @@ public class OptimizeScroll : MonoBehaviour
     private Queue<InventoryRow> rowPool = new Queue<InventoryRow>();
     private GameObject rowPfb;
     
+    private LinkedList<InventoryRow> activeRows = new LinkedList<InventoryRow>();
+    
     private void OnEnable()
     {
         scrollRect.onValueChanged.AddListener(HandleScroll);
+        InitRows();
     }
 
     /// <summary>
-    /// Unfortunately entry point need to be in this function to ensure ScrollRect's fully drawn before entry point
-    /// Can remove if chose to hardcode num of rows
+    /// Entry point
     /// </summary>
-    void OnRectTransformDimensionsChange()
+    private void InitRows()
     {
-        SetupPooling();
+        // TODO
+        // calling this to make sure viewportHeight is correct, any alternatives?
+        Canvas.ForceUpdateCanvases(); 
+        
+        // one-time call
+        float viewportHeight = GetComponent<ScrollRect>().viewport.rect.height;
+        float rowPlusSpacingHeight = InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING;
+        int visibleRowCount = Mathf.CeilToInt(viewportHeight / rowPlusSpacingHeight) + 1;
+        
+        SetupPooling(visibleRowCount);
+
+        // layout the initial rows
+        for (int i = 0; i < visibleRowCount; i++)
+        {
+            InventoryRow row = GetRowFromPool();
+            row.Init(i);
+            
+            // assumed anchoring top-left
+            row.transform.localPosition = new Vector2(
+                InventoryManager.LEFT_PADDING, 
+                - InventoryManager.TOP_PADDING - i * (InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING)
+            );
+            
+            activeRows.AddLast(row);
+        }
     }
     
     private void HandleScroll(Vector2 value)
@@ -45,13 +71,8 @@ public class OptimizeScroll : MonoBehaviour
 
     #region [ Pooling ]
 
-    private void SetupPooling()
+    private void SetupPooling(int initalPoolCount)
     {
-        // one-time call so...
-        float viewportHeight = GetComponent<ScrollRect>().viewport.rect.height;
-        float rowPlusSpacingHeight = InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING;
-        int initalPoolCount = Mathf.CeilToInt(viewportHeight / rowPlusSpacingHeight) + 1;
-
         rowPool.Clear();
         for (int i = 0; i < initalPoolCount; i++)
         {
@@ -59,7 +80,6 @@ public class OptimizeScroll : MonoBehaviour
             obj.SetActive(false);
             
             var rowScript = obj.GetComponent<InventoryRow>();
-            rowScript.Init(i);
             rowPool.Enqueue(rowScript);
         }
     }
@@ -101,5 +121,5 @@ public class OptimizeScroll : MonoBehaviour
         rowPool.Enqueue(row);
     }
 
-    #endregion
+    #endregion // [ Pooling ]
 }
