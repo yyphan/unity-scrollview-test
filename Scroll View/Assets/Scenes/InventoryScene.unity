@@ -1340,7 +1340,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1593921084}
-  - component: {fileID: 1593921086}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -1367,32 +1366,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &1593921086
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1593921083}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 10
-    m_Right: 0
-    m_Top: 10
-    m_Bottom: 10
-  m_ChildAlignment: 0
-  m_Spacing: 110
-  m_ChildForceExpandWidth: 0
-  m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1 &1729351176
 GameObject:
   m_ObjectHideFlags: 0
@@ -1517,10 +1490,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   contentHolder: {fileID: 1593921084}
-  verticalLayoutGroup: {fileID: 1593921086}
+  verticalLayoutGroup: {fileID: 0}
   inventoryRow: {fileID: 2416259030942289835, guid: 640bce65542764fd5ab07fb2d2a0ba6c, type: 3}
   numRows: 20
-  inventoryRows: []
 --- !u!114 &1729351182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1536,9 +1508,6 @@ MonoBehaviour:
   viewPort: {fileID: 777475492}
   scrollRect: {fileID: 1729351178}
   inventoryManager: {fileID: 1729351181}
-  rowPool: []
-  inventoryRowPrefab: {fileID: 5968815572479420485, guid: 640bce65542764fd5ab07fb2d2a0ba6c, type: 3}
-  verticalLayoutGroup: {fileID: 1593921086}
 --- !u!1 &1857200380
 GameObject:
   m_ObjectHideFlags: 0
