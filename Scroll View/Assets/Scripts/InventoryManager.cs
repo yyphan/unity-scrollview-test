@@ -6,13 +6,9 @@ public class InventoryManager : MonoBehaviour
 {
     [SerializeField] private RectTransform contentHolder;
     public RectTransform ContentHolder => contentHolder;
-
-    //[SerializeField] private VerticalLayoutGroup verticalLayoutGroup;
-    [SerializeField] private InventoryRow inventoryRow;
     
     [SerializeField] private int numRows = 10;
     public int NumRows => numRows;
-    //public GameObject[] inventoryRows;
     
     // Manual VerticalLayoutGroup
     public static float LEFT_PADDING = 10f;
@@ -24,22 +20,8 @@ public class InventoryManager : MonoBehaviour
 
     private void Start()
     {
-        //inventoryRows = new GameObject[numRows];
-        //PopulateInventoryDisplay();
         SetContentHeight();
     }
-    
-    // private void PopulateInventoryDisplay()
-    // {
-        // for (var i = 0; i < numRows; i++)
-        // {
-        //     var row = Instantiate(inventoryRow, contentHolder);
-        //     row.Init(i);
-        //     row.name = $"Row {i}";
-        //     inventoryRows[i] = row.gameObject;
-        // }
-        // SetContentHeight();
-    // }
 
     /// <summary>
     /// Content's Transform will have full height for ScrollBar to display correctly
@@ -48,12 +30,5 @@ public class InventoryManager : MonoBehaviour
     {
         var contentHeight = TOP_PADDING + ROW_HEIGHT * numRows + ROW_SPACING * (numRows - 1) + BTM_PADDING;
         contentHolder.sizeDelta = new Vector2(0f, contentHeight);
-        // StartCoroutine(DisableLayoutGroupNextFrame());
     }
-
-    // private IEnumerator DisableLayoutGroupNextFrame()
-    // {
-    //     yield return null;
-    //     verticalLayoutGroup.enabled = false;
-    // }
 }
