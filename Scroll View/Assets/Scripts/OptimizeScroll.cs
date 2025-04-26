@@ -19,7 +19,9 @@ public class OptimizeScroll : MonoBehaviour
     private LinkedList<InventoryRow> activeRows = new LinkedList<InventoryRow>();
     private float viewPortTopY;
     private float viewPortBtmY;
+    private int visibleRowCount;
     private float RowHeightPlusSpacing => (InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING);
+    private float lastSeenContentLocalPosY;
     
     private void OnEnable()
     {
@@ -43,7 +45,7 @@ public class OptimizeScroll : MonoBehaviour
         viewPortTopY = worldCorners[1].y;
         float viewportHeight = GetComponent<ScrollRect>().viewport.rect.height;
         float rowPlusSpacingHeight = InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING;
-        int visibleRowCount = Mathf.CeilToInt(viewportHeight / rowPlusSpacingHeight) + 1;
+        visibleRowCount = Mathf.CeilToInt(viewportHeight / rowPlusSpacingHeight) + 1;
         
         SetupPooling(visibleRowCount);
 
@@ -54,10 +56,7 @@ public class OptimizeScroll : MonoBehaviour
             row.Init(i);
             
             // assumed row anchoring top-left
-            row.transform.localPosition = new Vector2(
-                InventoryManager.LEFT_PADDING, 
-                - InventoryManager.TOP_PADDING - i * RowHeightPlusSpacing
-            );
+            row.transform.localPosition = GetRowLocalPosFromRowIdx(i);
             
             activeRows.AddLast(row);
         }
@@ -67,22 +66,39 @@ public class OptimizeScroll : MonoBehaviour
     {
         UpdateVisibleItems();
     }
-
-    /// <summary>
-    /// Goal is to do really lazy update, only when
-    /// 1. need to insert row to top
-    /// 2. need to insert row to bottom
-    /// 3. need to return row to pool
-    ///
-    /// Other time just let existing rows to flow with ScrollView's Content
-    /// </summary>
+    
     private void UpdateVisibleItems()
     {
         if (activeRows.Count == 0)
         {
             return;
         }
+
+        var curContentLocalPos = inventoryManager.ContentHolder.localPosition.y;
+        if (Mathf.Abs(curContentLocalPos - lastSeenContentLocalPosY) <= RowHeightPlusSpacing) // can do lazy update
+        {
+            HandleSlowScroll();
+        }
+        else
+        {
+            HandleFastScroll();
+        }
         
+        lastSeenContentLocalPosY = curContentLocalPos;
+    }
+    
+    /// <summary>
+    /// Ideal scenario
+    /// 
+    /// Scroll is slow enough to update one by one, goal is to do really lazy update, only when
+    /// 1. need to insert row to top
+    /// 2. need to insert row to bottom
+    /// 3. need to return row to pool
+    ///
+    /// Other time just let existing rows to flow with ScrollView's Content
+    /// </summary>
+    private void HandleSlowScroll()
+    {
         InventoryRow topRow = activeRows.First.Value;
         if (RowIsFullyOut(topRow))
         {
@@ -104,6 +120,42 @@ public class OptimizeScroll : MonoBehaviour
         {
             InsertBottom();
         }
+    }
+
+    /// <summary>
+    /// Not-so-ideal scenario
+    /// 
+    /// Scroll has jumped so fast we cannot update one by one, now force set everything
+    /// </summary>
+    private void HandleFastScroll()
+    {
+        foreach (var row in activeRows)
+        {
+            ReturnRowToPool(row);
+        }
+        activeRows.Clear();
+        
+        float contentYOffset = inventoryManager.ContentHolder.localPosition.y;
+        int startingIdx = Mathf.FloorToInt(contentYOffset / RowHeightPlusSpacing);
+
+        for (int i = startingIdx; i < startingIdx + visibleRowCount; i++)
+        {
+            InventoryRow row = GetRowFromPool();
+            row.Init(i);
+            
+            // assumed row anchoring top-left
+            row.transform.localPosition = GetRowLocalPosFromRowIdx(i);
+            
+            activeRows.AddLast(row);
+        }
+    }
+
+    #region [ Row Operations ]
+
+    private Vector2 GetRowLocalPosFromRowIdx(int rowIdx)
+    {
+        return new Vector2(InventoryManager.LEFT_PADDING,
+            -InventoryManager.TOP_PADDING - rowIdx * RowHeightPlusSpacing);
     }
 
     // assumed row anchoring top-left
@@ -145,6 +197,9 @@ public class OptimizeScroll : MonoBehaviour
         
         activeRows.AddLast(row);
     }
+
+    #endregion // [ Row Operations ]
+    
 
     #region [ Pooling ]
 
