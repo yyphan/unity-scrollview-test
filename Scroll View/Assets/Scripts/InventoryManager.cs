@@ -11,6 +11,7 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] private InventoryRow inventoryRow;
     
     [SerializeField] private int numRows = 10;
+    public int NumRows => numRows;
     //public GameObject[] inventoryRows;
     
     // Manual VerticalLayoutGroup

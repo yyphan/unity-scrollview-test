@@ -3,10 +3,15 @@ using UnityEngine;
 public class InventoryRow : MonoBehaviour
 {
     [SerializeField] private InventoryItemDisplay[] rowItems;
+    private int rowIdx;
+    public int RowIdx => rowIdx;
     
     public void Init(int rowIndex)
     {
-        var startIndex = rowIndex * rowItems.Length;
+        rowIdx = rowIndex;
+        name = $"Row {rowIdx}";
+        
+        var startIndex = rowIdx * rowItems.Length;
         for (var i = 0; i < rowItems.Length; i++)
         {
             rowItems[i].Init( startIndex+ i + 1);

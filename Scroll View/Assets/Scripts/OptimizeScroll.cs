@@ -17,6 +17,9 @@ public class OptimizeScroll : MonoBehaviour
     private GameObject rowPfb;
     
     private LinkedList<InventoryRow> activeRows = new LinkedList<InventoryRow>();
+    private float viewPortTopY;
+    private float viewPortBtmY;
+    private float RowHeightPlusSpacing => (InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING);
     
     private void OnEnable()
     {
@@ -30,10 +33,14 @@ public class OptimizeScroll : MonoBehaviour
     private void InitRows()
     {
         // TODO
-        // calling this to make sure viewportHeight is correct, any alternatives?
+        // calling this to make sure ScrollRect is fully drawn, any alternatives?
         Canvas.ForceUpdateCanvases(); 
         
-        // one-time call
+        // one-time setup
+        Vector3[] worldCorners = new Vector3[4];
+        GetComponent<RectTransform>().GetWorldCorners(worldCorners);
+        viewPortBtmY = worldCorners[0].y;
+        viewPortTopY = worldCorners[1].y;
         float viewportHeight = GetComponent<ScrollRect>().viewport.rect.height;
         float rowPlusSpacingHeight = InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING;
         int visibleRowCount = Mathf.CeilToInt(viewportHeight / rowPlusSpacingHeight) + 1;
@@ -46,10 +53,10 @@ public class OptimizeScroll : MonoBehaviour
             InventoryRow row = GetRowFromPool();
             row.Init(i);
             
-            // assumed anchoring top-left
+            // assumed row anchoring top-left
             row.transform.localPosition = new Vector2(
                 InventoryManager.LEFT_PADDING, 
-                - InventoryManager.TOP_PADDING - i * (InventoryManager.ROW_HEIGHT + InventoryManager.ROW_SPACING)
+                - InventoryManager.TOP_PADDING - i * RowHeightPlusSpacing
             );
             
             activeRows.AddLast(row);
@@ -61,12 +68,82 @@ public class OptimizeScroll : MonoBehaviour
         UpdateVisibleItems();
     }
 
+    /// <summary>
+    /// Goal is to do really lazy update, only when
+    /// 1. need to insert row to top
+    /// 2. need to insert row to bottom
+    /// 3. need to return row to pool
+    ///
+    /// Other time just let existing rows to flow with ScrollView's Content
+    /// </summary>
     private void UpdateVisibleItems()
     {
-        // Implement your solution here
-        // Access the array of inventory rows as needed: inventoryManager.inventoryRows
+        if (activeRows.Count == 0)
+        {
+            return;
+        }
         
+        InventoryRow topRow = activeRows.First.Value;
+        if (RowIsFullyOut(topRow))
+        {
+            activeRows.RemoveFirst();
+            ReturnRowToPool(topRow);
+        }
+        else if (topRow.RowIdx != 0 && RowIsFullyIn(topRow))
+        {
+            InsertTop();
+        }
         
+        InventoryRow btmRow = activeRows.Last.Value;
+        if (RowIsFullyOut(btmRow))
+        {
+            activeRows.RemoveLast();
+            ReturnRowToPool(btmRow);
+        }
+        else if (btmRow.RowIdx != inventoryManager.NumRows - 1 && RowIsFullyIn(btmRow))
+        {
+            InsertBottom();
+        }
+    }
+
+    // assumed row anchoring top-left
+    private bool RowIsFullyIn(InventoryRow row)
+    {
+        return row.transform.position.y <= viewPortTopY && 
+               row.transform.position.y >= (viewPortBtmY + RowHeightPlusSpacing);
+    }
+    
+    // assumed row anchoring top-left
+    private bool RowIsFullyOut(InventoryRow row)
+    {
+        return row.transform.position.y <= viewPortBtmY || 
+               row.transform.position.y >= (viewPortTopY + RowHeightPlusSpacing);
+    }
+
+    private void InsertTop()
+    {
+        var oriTopRow = activeRows.First.Value;
+        
+        var row = GetRowFromPool();
+        row.transform.localPosition = oriTopRow.transform.localPosition + new Vector3(0, RowHeightPlusSpacing, 0); 
+            
+        var newTopIdx = oriTopRow.RowIdx - 1;
+        row.Init(newTopIdx);
+        
+        activeRows.AddFirst(row);
+    }
+
+    private void InsertBottom()
+    {
+        var oriBtmRow = activeRows.Last.Value;
+        
+        var row = GetRowFromPool();
+        row.transform.localPosition = oriBtmRow.transform.localPosition - new Vector3(0, RowHeightPlusSpacing, 0); 
+            
+        var newTopIdx = oriBtmRow.RowIdx + 1;
+        row.Init(newTopIdx);
+        
+        activeRows.AddLast(row);
     }
 
     #region [ Pooling ]
